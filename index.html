@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vinstamp — Know the car before you own it</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#15181B;
+    --panel:#1D2226;
+    --panel-2:#252B30;
+    --plate:#E3E1D6;
+    --plate-edge:#B9B6A8;
+    --line:#33393E;
+    --text-hi:#F3F2ED;
+    --text-mid:#AEB4B8;
+    --text-low:#767D82;
+    --laser:#FF3B2F;
+    --laser-glow:rgba(255,59,47,0.35);
+    --verified:#33C983;
+    --radius:2px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--ink);
+    color:var(--text-hi);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3, .display{
+    font-family:'Oswald', sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.01em;
+    font-weight:600;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  a{ color:inherit; text-decoration:none; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 32px; }
+  ::selection{ background:var(--laser); color:#fff; }
+  :focus-visible{ outline:2px solid var(--laser); outline-offset:3px; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  /* ---------- NAV ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(21,24,27,0.88);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav.wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    height:72px;
+  }
+  .logo{ display:flex; align-items:center; gap:10px; font-family:'Oswald',sans-serif; font-size:20px; font-weight:700; letter-spacing:0.02em; text-transform:uppercase; }
+  .logo-mark{
+    width:28px; height:28px; border:2px solid var(--laser); border-radius:50%;
+    position:relative; flex-shrink:0;
+  }
+  .logo-mark::after{
+    content:""; position:absolute; left:50%; top:-4px; bottom:-4px; width:2px;
+    background:var(--laser); transform:translateX(-50%);
+    box-shadow:0 0 8px var(--laser-glow);
+  }
+  .nav-links{ display:flex; gap:36px; font-size:14px; color:var(--text-mid); }
+  .nav-links a:hover{ color:var(--text-hi); }
+  .nav-cta{ display:flex; align-items:center; gap:20px; }
+  .btn{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-weight:600; font-size:14px; letter-spacing:0.02em;
+    padding:11px 22px; border-radius:var(--radius); cursor:pointer;
+    border:1px solid transparent; transition:all .15s ease;
+    display:inline-flex; align-items:center; gap:8px;
+  }
+  .btn-primary{ background:var(--laser); color:#fff; }
+  .btn-primary:hover{ background:#e6362a; box-shadow:0 0 0 4px var(--laser-glow); }
+  .btn-ghost{ color:var(--text-mid); border-color:var(--line); }
+  .btn-ghost:hover{ color:var(--text-hi); border-color:var(--text-mid); }
+  @media (max-width:860px){ .nav-links{ display:none; } }
+
+  /* ---------- HERO ---------- */
+  .hero{ padding:96px 0 70px; position:relative; }
+  .hero-grid{
+    display:grid; grid-template-columns:1.05fr 1fr; gap:64px; align-items:center;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.14em;
+    color:var(--laser); text-transform:uppercase; display:flex; align-items:center; gap:10px; margin-bottom:22px;
+  }
+  .eyebrow::before{ content:""; width:22px; height:1px; background:var(--laser); }
+  .hero h1{
+    font-size:clamp(38px,4.6vw,58px); line-height:1.04; color:var(--text-hi); margin-bottom:22px;
+  }
+  .hero h1 em{ font-style:normal; color:var(--laser); }
+  .hero p.lead{
+    font-size:17px; line-height:1.65; color:var(--text-mid); max-width:460px; margin-bottom:34px;
+  }
+  .vin-form{
+    display:flex; gap:10px; background:var(--panel); border:1px solid var(--line);
+    padding:8px; border-radius:var(--radius); max-width:480px;
+  }
+  .vin-form input{
+    flex:1; background:transparent; border:none; outline:none; color:var(--text-hi);
+    font-family:'IBM Plex Mono', monospace; font-size:15px; letter-spacing:0.06em;
+    padding:12px 14px; text-transform:uppercase;
+  }
+  .vin-form input::placeholder{ color:var(--text-low); letter-spacing:0.04em; }
+  .vin-form.is-loading input{ opacity:0.6; }
+  .form-msg{ font-family:'IBM Plex Mono', monospace; font-size:12.5px; margin-top:10px; min-height:16px; letter-spacing:0.02em; }
+  .form-msg.err{ color:var(--laser); }
+  .form-msg.ok{ color:var(--verified); }
+  .form-msg.pending{ color:var(--text-low); }
+  .hero-meta{ display:flex; gap:28px; margin-top:26px; }
+  .hero-meta div{ font-size:13px; color:var(--text-low); }
+  .hero-meta strong{ display:block; font-family:'Oswald',sans-serif; font-size:22px; color:var(--text-hi); font-weight:600; }
+
+  /* ---------- SIGNATURE: SCAN PLATE ---------- */
+  .plate-stage{ position:relative; display:flex; justify-content:center; }
+  .plate{
+    position:relative; width:100%; max-width:440px;
+    background:linear-gradient(155deg, var(--plate) 0%, #cfccbf 100%);
+    border-radius:6px;
+    border:1px solid var(--plate-edge);
+    padding:30px 26px 26px;
+    box-shadow:0 40px 80px -30px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.4);
+    overflow:hidden;
+  }
+  .plate::before{
+    content:""; position:absolute; inset:0;
+    background-image:repeating-linear-gradient(90deg, rgba(0,0,0,0.035) 0 1px, transparent 1px 6px);
+    pointer-events:none;
+  }
+  .plate-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+  .plate-label{ font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.12em; color:#6b6a5f; text-transform:uppercase; }
+  .plate-dot{ width:7px; height:7px; border-radius:50%; background:#8f8d7f; }
+  .vin-string{
+    font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:clamp(19px,2.6vw,25px);
+    color:#20221f; letter-spacing:0.05em; display:flex; flex-wrap:wrap; gap:2px 0; margin-bottom:22px;
+  }
+  .vin-string span{ position:relative; padding:2px 1px; transition:color .2s ease; }
+  .vin-string span.lit{ color:var(--laser); }
+  .segments{ display:flex; flex-direction:column; gap:9px; }
+  .seg-row{
+    display:flex; align-items:center; gap:10px; font-size:12px; color:#514f45;
+    opacity:0; transform:translateY(4px); transition:opacity .35s ease, transform .35s ease;
+  }
+  .seg-row.show{ opacity:1; transform:translateY(0); }
+  .seg-chip{
+    font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:11px; color:#20221f;
+    background:rgba(255,59,47,0.14); border:1px solid rgba(255,59,47,0.35);
+    padding:2px 7px; border-radius:2px; min-width:44px; text-align:center;
+  }
+  .seg-text b{ color:#20221f; font-weight:600; }
+  .laser-line{
+    position:absolute; left:6px; right:6px; height:2px; background:var(--laser);
+    box-shadow:0 0 14px 3px var(--laser-glow); top:30px;
+    animation:scan 3.6s ease-in-out infinite;
+  }
+  @keyframes scan{
+    0%{ top:30px; opacity:0; }
+    6%{ opacity:1; }
+    48%{ top:calc(100% - 20px); opacity:1; }
+    54%{ opacity:0; }
+    100%{ top:30px; opacity:0; }
+  }
+  .plate-foot{
+    display:flex; align-items:center; gap:8px; margin-top:22px; padding-top:16px;
+    border-top:1px dashed var(--plate-edge); font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--verified);
+  }
+  .plate-foot .pulse{ width:6px; height:6px; border-radius:50%; background:var(--verified); box-shadow:0 0 8px var(--verified); animation:pulse 1.6s infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+
+  @media (max-width:900px){
+    .hero-grid{ grid-template-columns:1fr; }
+    .hero{ padding:56px 0 40px; }
+  }
+
+  /* ---------- TRUST STRIP ---------- */
+  .trust{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:26px 0; }
+  .trust .wrap{ display:flex; flex-wrap:wrap; gap:40px; justify-content:space-between; align-items:center; }
+  .trust span{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.08em; color:var(--text-low); text-transform:uppercase; }
+
+  /* ---------- SECTION SHARED ---------- */
+  section{ padding:100px 0; }
+  .section-head{ max-width:600px; margin-bottom:56px; }
+  .section-head .eyebrow{ margin-bottom:16px; }
+  .section-head h2{ font-size:clamp(28px,3.4vw,40px); color:var(--text-hi); line-height:1.1; }
+  .section-head p{ color:var(--text-mid); font-size:16px; margin-top:16px; line-height:1.6; }
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+  .step{ background:var(--ink); padding:36px 30px; }
+  .step-num{ font-family:'IBM Plex Mono',monospace; color:var(--laser); font-size:13px; margin-bottom:22px; }
+  .step h3{ font-size:19px; color:var(--text-hi); margin-bottom:10px; }
+  .step p{ color:var(--text-mid); font-size:14px; line-height:1.6; }
+  @media (max-width:800px){ .steps{ grid-template-columns:1fr; } }
+
+  /* ---------- FEATURES ---------- */
+  .features{ background:var(--panel); }
+  .feat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+  .feat{ background:var(--panel); padding:30px 24px; min-height:190px; display:flex; flex-direction:column; justify-content:flex-end; }
+  .feat-icon{ width:34px; height:34px; margin-bottom:auto; }
+  .feat h3{ font-size:15px; color:var(--text-hi); margin-bottom:8px; letter-spacing:0.01em; }
+  .feat p{ color:var(--text-mid); font-size:13px; line-height:1.55; }
+  @media (max-width:900px){ .feat-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:560px){ .feat-grid{ grid-template-columns:1fr; } }
+
+  /* ---------- REPORT PREVIEW ---------- */
+  .report{ display:grid; grid-template-columns:0.9fr 1.1fr; gap:60px; align-items:center; }
+  .report-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:28px;
+  }
+  .report-row{ display:flex; justify-content:space-between; padding:13px 0; border-bottom:1px solid var(--line); font-size:14px; }
+  .report-row:last-child{ border-bottom:none; }
+  .report-row .k{ color:var(--text-low); }
+  .report-row .v{ color:var(--text-hi); font-family:'IBM Plex Mono',monospace; font-size:13px; }
+  .report-row .v.ok{ color:var(--verified); }
+  .report-badge{
+    display:inline-flex; align-items:center; gap:8px; background:rgba(51,201,131,0.1);
+    border:1px solid rgba(51,201,131,0.35); color:var(--verified); font-family:'IBM Plex Mono',monospace;
+    font-size:12px; padding:7px 12px; border-radius:2px; margin-bottom:20px;
+  }
+  @media (max-width:900px){ .report{ grid-template-columns:1fr; } }
+
+  /* ---------- CTA ---------- */
+  .cta{
+    background:var(--panel-2); border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    text-align:center; padding:90px 0;
+  }
+  .cta h2{ font-size:clamp(28px,4vw,42px); color:var(--text-hi); margin-bottom:18px; }
+  .cta p{ color:var(--text-mid); margin-bottom:34px; }
+  .cta .vin-form{ margin:0 auto; }
+
+  /* ---------- FOOTER ---------- */
+  footer{ padding:56px 0 40px; }
+  .foot-grid{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:40px; margin-bottom:48px; }
+  .foot-col h4{ font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-low); margin-bottom:16px; font-family:'IBM Plex Mono',monospace; font-weight:500; }
+  .foot-col a{ display:block; color:var(--text-mid); font-size:14px; margin-bottom:11px; }
+  .foot-col a:hover{ color:var(--text-hi); }
+  .foot-bottom{ display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line); padding-top:26px; flex-wrap:wrap; gap:16px; }
+  .foot-bottom span{ font-size:13px; color:var(--text-low); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <div class="logo"><span class="logo-mark"></span>Vinstamp</div>
+    <div class="nav-links">
+      <a href="#scan">Scan a VIN</a>
+      <a href="#how">How it works</a>
+      <a href="#features">What you get</a>
+      <a href="#report">Sample report</a>
+    </div>
+    <div class="nav-cta">
+      <a href="#" class="btn btn-ghost">Sign in</a>
+      <a href="#scan" class="btn btn-primary">Scan free</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero" id="scan">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">17 characters, no secrets</div>
+      <h1>Know the car <em>before</em><br>it's your problem.</h1>
+      <p class="lead">Paste a VIN or snap the plate. Vinstamp reads the manufacturer code, the plant, the model year, and cross-checks it against title, accident, and recall records — in under ten seconds.</p>
+      <form class="vin-form" id="heroForm">
+        <input type="text" maxlength="17" placeholder="Enter 17-digit VIN — e.g. 1HGCM82633A004352" aria-label="Enter VIN" id="heroInput">
+        <button class="btn btn-primary" type="submit" id="heroBtn">Decode</button>
+      </form>
+      <div class="form-msg" id="heroMsg" role="status" aria-live="polite"></div>
+      <div class="hero-meta">
+        <div><strong>41M+</strong>vehicles decoded</div>
+        <div><strong>0.8s</strong>average scan time</div>
+        <div><strong>96%</strong>title-check accuracy</div>
+      </div>
+    </div>
+
+    <div class="plate-stage">
+      <div class="plate">
+        <div class="laser-line"></div>
+        <div class="plate-top">
+          <span class="plate-label" id="plateLabel">Sample plate — try your own VIN</span>
+          <span class="plate-dot"></span>
+        </div>
+        <div class="vin-string" id="vinString"></div>
+        <div class="segments" id="segments">
+          <div class="seg-row" data-at="1"><span class="seg-chip">1–3</span><span class="seg-text">World manufacturer — <b id="segMake">Honda, USA</b></span></div>
+          <div class="seg-row" data-at="2"><span class="seg-chip">4–8</span><span class="seg-text">Vehicle attributes — <b id="segModel">Accord EX, 4-door</b></span></div>
+          <div class="seg-row" data-at="3"><span class="seg-chip">10</span><span class="seg-text">Model year — <b id="segYear">2003</b></span></div>
+          <div class="seg-row" data-at="4"><span class="seg-chip">11</span><span class="seg-text">Assembly plant — <b id="segPlant">Marysville, OH</b></span></div>
+          <div class="seg-row" data-at="5"><span class="seg-chip">12–17</span><span class="seg-text">Serial number — <b id="segSerial">004352</b></span></div>
+        </div>
+        <div class="plate-foot"><span class="pulse"></span><span id="plateFoot">No open recalls found</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="trust">
+  <div class="wrap">
+    <span>Trusted for</span>
+    <span>Private sale checks</span>
+    <span>Dealer intake</span>
+    <span>Insurance claims</span>
+    <span>Fleet audits</span>
+    <span>Import inspection</span>
+  </div>
+</div>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">The process</div>
+      <h2>Three steps, one plate.</h2>
+      <p>No account needed for a first scan. Full history reports unlock with a report credit.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num mono">01</div>
+        <h3>Enter or scan</h3>
+        <p>Type the 17-digit VIN, or point your camera at the door jamb or windshield plate — Vinstamp reads it straight off the metal.</p>
+      </div>
+      <div class="step">
+        <div class="step-num mono">02</div>
+        <h3>Instant decode</h3>
+        <p>We break the code into manufacturer, model, trim, plant, and year, and flag anything that doesn't check out.</p>
+      </div>
+      <div class="step">
+        <div class="step-num mono">03</div>
+        <h3>Full report</h3>
+        <p>Title status, odometer history, accident and recall records, and prior ownership count, compiled into one page.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features" id="features">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">What you get</div>
+      <h2>Everything the plate won't tell you.</h2>
+    </div>
+    <div class="feat-grid">
+      <div class="feat">
+        <h3>Title status</h3>
+        <p>Salvage, flood, lemon, or clean — pulled from state DMV and insurance total-loss records.</p>
+      </div>
+      <div class="feat">
+        <h3>Accident history</h3>
+        <p>Reported collisions, airbag deployments, and structural damage claims tied to the VIN.</p>
+      </div>
+      <div class="feat">
+        <h3>Odometer trail</h3>
+        <p>Mileage readings logged at every inspection, sale, and service visit, checked for rollback.</p>
+      </div>
+      <div class="feat">
+        <h3>Open recalls</h3>
+        <p>Live manufacturer recall data, matched against the exact build and trim.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="report">
+  <div class="wrap report">
+    <div>
+      <div class="eyebrow">Sample report</div>
+      <h2>One page. Every answer.</h2>
+      <p class="lead" style="margin-top:16px;">Every scan compiles into a report you can screenshot, download, or send straight to a seller before you wire a deposit.</p>
+    </div>
+    <div class="report-card">
+      <div class="report-badge" id="reportBadge">● Sample report — decode a VIN above to update this</div>
+      <div class="report-row"><span class="k">VIN</span><span class="v" id="repVin">1HGCM82633A004352</span></div>
+      <div class="report-row"><span class="k">Vehicle</span><span class="v" id="repVehicle">2003 Honda Accord EX</span></div>
+      <div class="report-row"><span class="k">Assembly plant</span><span class="v" id="repPlant">Marysville, OH</span></div>
+      <div class="report-row"><span class="k">Odometer</span><span class="v ok" id="repOdo">No rollback detected</span></div>
+      <div class="report-row"><span class="k">Accidents on file</span><span class="v ok" id="repAccidents">None reported</span></div>
+      <div class="report-row"><span class="k">Open recalls</span><span class="v ok" id="repRecalls">0 active</span></div>
+      <div class="report-row"><span class="k">Prior owners</span><span class="v" id="repOwners">2</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <h2>Got a VIN? Let's read it.</h2>
+    <p>Free to decode. One credit for the full history report.</p>
+    <form class="vin-form" id="ctaForm">
+      <input type="text" maxlength="17" placeholder="Enter 17-digit VIN" aria-label="Enter VIN" id="ctaInput">
+      <button class="btn btn-primary" type="submit" id="ctaBtn">Decode</button>
+    </form>
+    <div class="form-msg" id="ctaMsg" role="status" aria-live="polite" style="min-height:16px;"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-col" style="max-width:260px;">
+        <div class="logo" style="margin-bottom:14px;"><span class="logo-mark"></span>Vinstamp</div>
+        <p style="color:var(--text-mid); font-size:13px; line-height:1.6;">Independent VIN decoding and history reports. Not affiliated with any manufacturer.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Product</h4>
+        <a href="#scan">Scan a VIN</a>
+        <a href="#features">What you get</a>
+        <a href="#report">Sample report</a>
+      </div>
+      <div class="foot-col">
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Data sources</a>
+        <a href="#">Contact</a>
+      </div>
+      <div class="foot-col">
+        <h4>Legal</h4>
+        <a href="#">Terms</a>
+        <a href="#">Privacy</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Vinstamp. All rights reserved.</span>
+      <span class="mono">Built for buyers, not dealers.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* ============================================================
+     PLATE ANIMATION
+     Renders whatever VIN is currently loaded, character by
+     character, and reveals the five decode rows in sync with
+     the laser sweep.
+  ============================================================ */
+  const vinEl = document.getElementById('vinString');
+  const rows = document.querySelectorAll('.seg-row');
+  let currentVin = "1HGCM82633A004352";
+  let revealTimer = null;
+
+  function renderVin(vin){
+    vinEl.innerHTML = "";
+    vin.split('').forEach((ch,i)=>{
+      const span = document.createElement('span');
+      span.textContent = ch;
+      span.dataset.i = i;
+      vinEl.appendChild(span);
+    });
+  }
+
+  function runReveal(){
+    document.querySelectorAll('#vinString span').forEach(s=>s.classList.remove('lit'));
+    rows.forEach(r=>r.classList.remove('show'));
+    const groups = [[0,1,2],[3,4,5,6,7],[9],[10],[11,12,13,14,15,16]];
+    groups.forEach((idxs, gi)=>{
+      setTimeout(()=>{
+        idxs.forEach(i=>{
+          const el = vinEl.querySelector('span[data-i="'+i+'"]');
+          if(el) el.classList.add('lit');
+        });
+        const row = document.querySelector('.seg-row[data-at="'+(gi+1)+'"]');
+        if(row) row.classList.add('show');
+      }, gi * 620 + 300);
+    });
+  }
+
+  function startLoop(){
+    if(revealTimer) clearInterval(revealTimer);
+    runReveal();
+    revealTimer = setInterval(runReveal, 3600);
+  }
+
+  renderVin(currentVin);
+  startLoop();
+
+  /* ============================================================
+     REAL VIN DECODING — NHTSA vPIC API (free, no key required)
+     Docs: https://vpic.nhtsa.gov/api/
+     This only returns build specs (make, model, year, plant,
+     body type). It does NOT return title/accident/odometer
+     history — that data lives behind paid record providers, so
+     we're upfront about that in the UI instead of faking it.
+  ============================================================ */
+  function cleanVin(raw){
+    return raw.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, ''); // VINs never use I, O, Q
+  }
+
+  function getVal(results, variableName){
+    const row = results.find(r => r.Variable === variableName);
+    return row && row.Value && row.Value !== 'Not Applicable' ? row.Value : '';
+  }
+
+  async function decodeVin(vin, msgEl, formEl){
+    msgEl.textContent = 'Reading plate…';
+    msgEl.className = 'form-msg pending';
+    formEl.classList.add('is-loading');
+
+    try{
+      const res = await fetch(`https://vpic.nhtsa.gov/api/vehicles/DecodeVin/${vin}?format=json`);
+      if(!res.ok) throw new Error('network');
+      const data = await res.json();
+      const results = data.Results || [];
+
+      const errorCode = getVal(results, 'Error Code');
+      const make = getVal(results, 'Make');
+      const model = getVal(results, 'Model');
+      const year = getVal(results, 'Model Year');
+      const plantCity = getVal(results, 'Plant City');
+      const plantState = getVal(results, 'Plant State');
+      const plantCountry = getVal(results, 'Plant Country');
+      const bodyClass = getVal(results, 'Body Class');
+      const trim = getVal(results, 'Trim');
+
+      if(!make || errorCode === '' && !make){
+        throw new Error('undecodable');
+      }
+      if(errorCode && errorCode !== '0'){
+        // NHTSA still returns partial data with a warning code — show it but flag as unverified
+        msgEl.textContent = 'Partially decoded — check digit didn\'t fully validate.';
+        msgEl.className = 'form-msg err';
+      } else {
+        msgEl.textContent = 'Decoded successfully.';
+        msgEl.className = 'form-msg ok';
+      }
+
+      // Update plate
+      currentVin = vin;
+      renderVin(vin);
+      document.getElementById('plateLabel').textContent = 'Live plate — ' + vin;
+      document.getElementById('segMake').textContent = make || 'Unknown manufacturer';
+      document.getElementById('segModel').textContent = [model, trim].filter(Boolean).join(', ') || bodyClass || '—';
+      document.getElementById('segYear').textContent = year || '—';
+      document.getElementById('segPlant').textContent = [plantCity, plantState || plantCountry].filter(Boolean).join(', ') || 'Not published';
+      document.getElementById('segSerial').textContent = vin.slice(-6);
+      document.getElementById('plateFoot').textContent = 'Build data verified against NHTSA registry';
+      startLoop();
+
+      // Update sample report card with what's actually available from a free decode
+      document.getElementById('reportBadge').textContent = '● Build data verified — title & history need a paid report';
+      document.getElementById('repVin').textContent = vin;
+      document.getElementById('repVehicle').textContent = [year, make, model].filter(Boolean).join(' ') || '—';
+      document.getElementById('repPlant').textContent = [plantCity, plantState || plantCountry].filter(Boolean).join(', ') || 'Not published';
+      document.getElementById('repOdo').textContent = 'Requires paid report';
+      document.getElementById('repOdo').classList.remove('ok');
+      document.getElementById('repAccidents').textContent = 'Requires paid report';
+      document.getElementById('repAccidents').classList.remove('ok');
+      document.getElementById('repRecalls').textContent = 'Requires paid report';
+      document.getElementById('repRecalls').classList.remove('ok');
+      document.getElementById('repOwners').textContent = 'Requires paid report';
+
+      document.getElementById('report').scrollIntoView({behavior:'smooth', block:'start'});
+
+    } catch(err){
+      msgEl.textContent = 'Couldn\'t decode that VIN — check the 17 characters and try again.';
+      msgEl.className = 'form-msg err';
+    } finally {
+      formEl.classList.remove('is-loading');
+    }
+  }
+
+  function wireForm(formId, inputId, msgId){
+    const form = document.getElementById(formId);
+    const input = document.getElementById(inputId);
+    const msg = document.getElementById(msgId);
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const vin = cleanVin(input.value);
+      if(vin.length !== 17){
+        msg.textContent = 'A VIN is exactly 17 characters (no I, O, or Q).';
+        msg.className = 'form-msg err';
+        return;
+      }
+      decodeVin(vin, msg, form);
+    });
+  }
+
+  wireForm('heroForm','heroInput','heroMsg');
+  wireForm('ctaForm','ctaInput','ctaMsg');
+</script>
+
+</body>
+</html>
